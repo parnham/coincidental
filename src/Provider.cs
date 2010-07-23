@@ -22,13 +22,11 @@ namespace Coincidental
 		{
 			if (this.container == null)
 			{
-				IEmbeddedConfiguration config = Db4oEmbedded.NewConfiguration(); // Db4oFactory.Configure();
-				//config.UpdateDepth(1);
+				IEmbeddedConfiguration config	= Db4oEmbedded.NewConfiguration();
 				config.Common.UpdateDepth		= 1;
-				//config.ActivationDepth(activationDepth);
 				config.Common.ActivationDepth	= activationDepth;
 				
-				this.container	= Db4oEmbedded.OpenFile(config, connectionString); //Db4oFactory.OpenFile(config, connectionString);
+				this.container	= Db4oEmbedded.OpenFile(config, connectionString);
 				this.cache		= new PersistenceCache(this.container);
 			
 				return true;
