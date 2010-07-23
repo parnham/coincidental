@@ -16,41 +16,7 @@ namespace CoincidentalTest
 		
 		public static void Main(string [] args)
 		{
-			Provider db = new Provider();
-			db.Initialise("test.yap", 1);
-			db.Store<Entity>(new Entity { 
-				Name = "Test", 
-				Time = DateTime.Now, 
-				Reference = new Entity { 
-					Name = "Reference" 
-				} 
-			});
-			
-			Entity entity = db.Get<Entity>(e => e.Name == "Test");
-			Console.WriteLine(entity.Name);
-			
-			try
-			{
-				// Will throw an exception since the object is not locked
-				entity.Name = "NewName";		
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e.Message);
-			}
-			
-			while (!db.Lock(entity)) Thread.Sleep(1);
-			
-			// This time it works because the object has been locked
-			entity.Name = "NewName";		
-			
-			db.Unlock(entity);
-			
-			Console.WriteLine(entity.Name);
-			
-			db.Dispose();
-			
-			/*using (Provider db = new Provider())
+			using (Provider db = new Provider())
 			{
 				// Create new DB
 				if (File.Exists("test.yap")) File.Delete("test.yap");
@@ -83,7 +49,7 @@ namespace CoincidentalTest
 				Console.WriteLine("\nEntity: ");
 				MainClass.PrintEntity(entity, 2);
 				MainClass.CheckEntity(entity);
-			}*/
+			}
 		}
 		
 		
