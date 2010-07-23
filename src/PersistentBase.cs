@@ -15,9 +15,10 @@ namespace Coincidental
 		void Unlock();
 	}
 	
+	
 	internal abstract class PersistentBase : IPersistentBase
 	{
-		private static int LOCK_TIMEOUT = 1;  // Milliseconds
+		private static int LOCK_TIMEOUT = 2; 	// Milliseconds
 		private static int CACHE_LIFE	= 600;	// Seconds
 
 		protected PersistenceCache cache;

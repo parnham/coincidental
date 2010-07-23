@@ -131,25 +131,13 @@ will not be permitted (since db4o locks the file).
 
 	Provides a simple way of retrieving a single entity from the database.
 
+  * Lock Lock(**params object** [] *entities*)
+    * *entities*: A variable number of persistent objects to be locked.
+    * Returns a Lock instance which must be disposed.
 
-  * **bool** Lock(**params object** [] *entities*)
-    * *entities*: An arbitrary number of persistent objects to be locked.
-    * Returns true if all entities were successfully locked and false otherwise. An exception will be thrown if any of the objects
-	are not persistent.
-
-	Attempts to lock all of the supplied objects for writing. It is assumed that when an application is attempting to modify
-	an object, it is actually interested in modifying a set of objects at that point. This function will attempt to lock
-	all of the required objects but if any fail to lock (due to timeout) any that managed to be locked will be automatically
-	unlocked. The timeout is a constant currently set to 1 ms, but this may be changed to a configuration option at some point.
-	To implement the example given in the introduction and application must keep calling this (preferably with a sleep in between)
-	until it is successful.
-
-
-  * **void** Unlock(**params object** [] *entities*)
-    * *entities*: An arbitrary number of persistent objects to be unlocked.
-    * An exception will be thrown if any of the objects are not persistent.
-
-	Releases the locks on the supplied objects.
+    Keeps attempting to lock all of the supplied objects until it is successful and then returns an instance
+    of Lock which will automatically unlock all of the objects when it is disposed. The simplest way of ensuring
+    this is with the "using" syntax (see the example at the bottom).
 
 
   * **void** Flush()
@@ -211,36 +199,38 @@ This is a quick example based around the Entity defined above:
 		{
 			public static void Main(string [] args)
 			{
-				Provider db = new Provider();
-				db.Initialise("test.yap", 1);
-				db.Store<Entity>(new Entity {
-					Name = "Test",
-					Time = DateTime.Now,
-					Reference = new Entity {
-						Name = "Reference"
+				using (Provider db = new Provider())
+				{
+					db.Initialise("test.yap", 1);
+					db.Store<Entity>(new Entity {
+						Name = "Test",
+						Time = DateTime.Now,
+						Reference = new Entity {
+							Name = "Reference"
+						}
+					});
+
+					Entity entity = db.Get<Entity>(e => e.Name == "Test");
+					Console.WriteLine(entity.Name);
+
+					try
+					{
+						// Will throw an exception since the object is not locked
+						entity.Name = "NewName";
 					}
-				});
+					catch (Exception e)
+					{
+						Console.WriteLine(e.Message);
+					}
 
-				Entity entity = db.Get<Entity>(e => e.Name == "Test");
-				Console.WriteLine(entity.Name);
+					using (Lock l = db.Lock(entity))
+					{
+						// This time it works because the object has been locked
+						entity.Name = "NewName";
+					}
 
-				try
-				{
-					// Will throw an exception since the object is not locked
-					entity.Name = "NewName";
+					Console.WriteLine(entity.Name);
 				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e.Message);
-				}
-
-				while (!db.Lock(entity)) Thread.Sleep(1);
-					// This time it works because the object has been locked
-					entity.Name = "NewName";
-				db.Unlock(entity);
-
-				Console.WriteLine(entity.Name);
-				db.Dispose();
 			}
 		}
 	}

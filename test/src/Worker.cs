@@ -59,16 +59,6 @@ namespace CoincidentalTest
 		}
 		
 		
-		private void Lock(params object [] entities)
-		{
-			while (!this.db.Lock(entities))
-			{
-				this.WriteLockFails++;
-				Thread.Sleep(1);
-			}
-		}
-		
-		
 		private void Read(Entity entity)
 		{
 			long id 	= entity.Id;
@@ -82,62 +72,69 @@ namespace CoincidentalTest
 		
 		private void Write(Entity entity)
 		{
-			this.Lock(entity);
-			
+			using (Lock l = this.db.Lock(entity))
+			{
 				entity.Id++;
 				entity.Time = DateTime.Now;
-			
-			this.db.Unlock(entity);
+				
+				this.WriteLockFails += l.Failures;
+			}
 		}
 		
 		
 		private void WriteReference(Entity entity)
 		{
-			this.Lock(entity, entity.Reference);
-			
+			using (Lock l = this.db.Lock(entity, entity.Reference))
+			{
 				entity.Reference.Name = string.Format("Owned by {0}", this.Id);
 				entity.Reference.Id += 2;
-			
-			this.db.Unlock(entity, entity.Reference);
+				
+				this.WriteLockFails += l.Failures;
+			}
 		}
 		
 		
 		private void UpdateLists(Entity entity)
 		{
-			this.Lock(entity, entity.LongList);
-			
+			using (Lock l = this.db.Lock(entity, entity.LongList))
+			{
 				entity.LongList.Add(MainClass.WORKER_NUMBER * this.pass + this.Id);
-			
-			this.db.Unlock(entity, entity.LongList);
-			
+				
+				this.WriteLockFails += l.Failures;
+			}
 			
 			Entity first = entity.ReferenceList.First();
 			
-			this.Lock(first);
+			using (Lock l = this.db.Lock(first))
+			{
 				first.Name += string.Format(", {0}", this.Id);
-			this.db.Unlock(first);
+				
+				this.WriteLockFails += l.Failures;
+			}
 		}
 		
 		
 		private void UpdateDictionaries(Entity entity)
 		{
-			this.Lock(entity, entity.StringLongDictionary);
-			
+			using (Lock l = this.db.Lock(entity, entity.StringLongDictionary))
+			{
 				entity.StringLongDictionary.Add((MainClass.WORKER_NUMBER * this.pass + this.Id).ToString(), this.Id);
-			
-			this.db.Unlock(entity, entity.StringLongDictionary);
-			
+				
+				this.WriteLockFails += l.Failures;
+			}
+		
 			
 			KeyValuePair<Entity, Entity> item = entity.ReferenceReferenceDictionary.First();
 			
-			this.Lock(item.Key, item.Value, item.Value.LongList);
-			
+			using (Lock l = this.db.Lock(item.Key, item.Value, item.Value.LongList))
+			{
 				item.Key.Id++;
 				item.Value.Id--;
 				item.Value.Time = DateTime.Now;
 				item.Value.LongList.Add(this.Id);
-			
-			this.db.Unlock(item.Key, item.Value, item.Value.LongList);
+				
+				this.WriteLockFails += l.Failures;
+			}
 		}
 	}
 }

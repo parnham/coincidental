@@ -12,6 +12,26 @@ using Db4objects.Db4o.Config;
 
 namespace Coincidental
 {
+	public class Lock : IDisposable
+	{
+		public int Failures	{ get; set; } 	// Debug property
+		
+		private IPersistentBase [] entities;
+
+		
+		internal Lock(IPersistentBase [] entities)
+		{
+			this.entities = entities;
+		}
+		
+		
+		public void Dispose()
+		{
+			foreach (IPersistentBase entity in entities) entity.Unlock();
+		}
+	}
+	
+	
 	public class Provider : IDisposable
 	{
 		private IObjectContainer container	= null;
@@ -76,43 +96,24 @@ namespace Coincidental
 		}
 		
 		
-		public bool Lock(params object [] entities)
+		
+		public Lock Lock(params object [] entities)
 		{
-			bool result = true;
+			int failures 				= 0;
+			IPersistentBase [] items	= entities.OfType<IPersistence>().Select<IPersistence, IPersistentBase>(p => p.GetBase()).ToArray();
 			
-			lock(this)
+			while (!this.TryLock(items)) 
 			{
-				foreach (IPersistence entity in entities.Cast<IPersistence>())
-				{
-					if (entity != null)
-					{
-						if (!entity.GetBase().Lock(false))
-						{
-							result = false;
-							break;
-						}
-					}
-					else throw new Exception("Attempted to lock a transient object");
-				}
+				// Possibly add an eventual break out here with an exception and some form of logging
+				// indicating that a dead-lock has occurred?
+				System.Threading.Thread.Sleep(1);
+				failures++;
 			}
 			
-			// Couldn't lock all objects so unlock any that have been
-			if (!result) this.Unlock(entities);
-			
-			return result;
+			return new Lock(items) { Failures = failures };
 		}
 		
 		
-		public void Unlock(params object [] entities)
-		{
-			foreach (IPersistence entity in entities.Cast<IPersistence>())
-			{
-				if (entity != null) entity.GetBase().Unlock();
-				else 				throw new Exception("Attempted to unlock a transient object");
-			}
-		}
-		
-
 		public void Flush()
 		{
 			lock(this)
@@ -120,7 +121,28 @@ namespace Coincidental
 				this.cache.Flush();
 			}
 		}
+		
+		
+		private bool TryLock(IPersistentBase [] entities)
+		{
+			bool result = true;
+			
+			lock(this)
+			{
+				foreach (IPersistentBase entity in entities)
+				{
+					if (!entity.Lock(false))
+					{
+						result = false;
+						break;
+					}
+				}
+			}
+			
+			// Couldn't lock all objects so unlock any that have been to avoid a dead-lock
+			if (!result) foreach (IPersistentBase entity in entities) entity.Unlock();
+			
+			return result;
+		}
 	}
-
 }
-
