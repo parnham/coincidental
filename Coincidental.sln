@@ -7,20 +7,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoincidentalTest", "test\Co
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x86 = Debug|x86
-		Release|x86 = Release|x86
+		Debug = Debug
+		Release = Release
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug|x86.Build.0 = Debug|Any CPU
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Release|x86.ActiveCfg = Release|Any CPU
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Release|x86.Build.0 = Release|Any CPU
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug|x86.ActiveCfg = Debug|x86
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug|x86.Build.0 = Debug|x86
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release|x86.ActiveCfg = Release|x86
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release|x86.Build.0 = Release|x86
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug.ActiveCfg = Debug|Any CPU
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug.Build.0 = Debug|Any CPU
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Release.ActiveCfg = Release|Any CPU
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Release.Build.0 = Release|Any CPU
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug.ActiveCfg = Debug
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug.Build.0 = Debug
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release.ActiveCfg = Release
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = test\CoincidentalTest.csproj
+		StartupItem = Coincidental.csproj
 	EndGlobalSection
 EndGlobal

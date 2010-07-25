@@ -24,7 +24,7 @@ namespace CoincidentalTest
 				
 				// Initialise DB
 				Entity entity = MainClass.GetInitialData();
-				db.Store<Entity>(entity);
+				db.Store(entity);
 				
 				MainClass.RunTests("First pass", 0, db);
 			}
@@ -102,10 +102,9 @@ namespace CoincidentalTest
 		
 		private static void PrintStats(List<Worker> workers)
 		{
-			Console.WriteLine("  Min:                      {0} ms", workers.Min(w => w.TimeTaken));
-			Console.WriteLine("  Max:                      {0} ms", workers.Max(w => w.TimeTaken));
-			Console.WriteLine("  Mean:                     {0} ms", workers.Average(w => w.TimeTaken));
-			Console.WriteLine("  Total writelock failures: {0}", workers.Sum(w => w.WriteLockFails));
+			Console.WriteLine("  Min:  {0} ms", workers.Min(w => w.TimeTaken));
+			Console.WriteLine("  Max:  {0} ms", workers.Max(w => w.TimeTaken));
+			Console.WriteLine("  Mean: {0} ms", workers.Average(w => w.TimeTaken));
 		}
 		
 		

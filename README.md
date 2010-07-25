@@ -95,7 +95,7 @@ will not be permitted (since db4o locks the file).
 	This should be called before attempting to use any other functions, an exception will occur if you do not!
 
 
-  * T Store<T>(T *entity*)
+  * T Store< T>(T *entity*)
     * *entity*: Object to be stored. The underlying db4o container will automatically store the entire object tree.
     * Returns a persistent instance of the object.
 
@@ -118,7 +118,7 @@ will not be permitted (since db4o locks the file).
 	since it is performed in a single transaction.
 
 
-  * IQueryable<T> Query<T>()
+  * IQueryable< T> Query< T>()
     * Returns a queryable interface.
 
 	Provides the primary interface for querying the database. The queries are passed straight through to db4o but the results
@@ -131,12 +131,12 @@ will not be permitted (since db4o locks the file).
 
 	Provides a simple way of retrieving a single entity from the database.
 
-  * Lock Lock(**params object** [] *entities*)
+  * IDisposable Lock(**params object** [] *entities*)
     * *entities*: A variable number of persistent objects to be locked.
-    * Returns a Lock instance which must be disposed.
+    * Returns an object which must be disposed.
 
-    Keeps attempting to lock all of the supplied objects until it is successful and then returns an instance
-    of Lock which will automatically unlock all of the objects when it is disposed. The simplest way of ensuring
+    Keeps attempting to lock all of the supplied objects until it is successful and then returns an IDisposable instance
+    which will automatically unlock all of the objects when it is disposed. The simplest way of ensuring
     this is with the "using" syntax (see the example at the bottom).
 
 
@@ -223,7 +223,7 @@ This is a quick example based around the Entity defined above:
 						Console.WriteLine(e.Message);
 					}
 
-					using (Lock l = db.Lock(entity))
+					using (db.Lock(entity))
 					{
 						// This time it works because the object has been locked
 						entity.Name = "NewName";

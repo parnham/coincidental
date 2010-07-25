@@ -13,7 +13,6 @@ namespace CoincidentalTest
 	{
 		public long Id				{ get; set; }
 		public long TimeTaken 		{ get; set; }
-		public long WriteLockFails 	{ get; set; }
 		private Provider db; 
 		private int pass;
 		
@@ -26,7 +25,6 @@ namespace CoincidentalTest
 			this.db				= db;
 			this.pass			= pass;
 			this.TimeTaken		= -1;
-			this.WriteLockFails	= 0;
 			
 			this.jobs.Add(this.Read);
 			this.jobs.Add(this.Write);
@@ -72,68 +70,56 @@ namespace CoincidentalTest
 		
 		private void Write(Entity entity)
 		{
-			using (Lock l = this.db.Lock(entity))
+			using (this.db.Lock(entity))
 			{
 				entity.Id++;
 				entity.Time = DateTime.Now;
-				
-				this.WriteLockFails += l.Failures;
 			}
 		}
 		
 		
 		private void WriteReference(Entity entity)
 		{
-			using (Lock l = this.db.Lock(entity, entity.Reference))
+			using (this.db.Lock(entity, entity.Reference))
 			{
 				entity.Reference.Name = string.Format("Owned by {0}", this.Id);
 				entity.Reference.Id += 2;
-				
-				this.WriteLockFails += l.Failures;
 			}
 		}
 		
 		
 		private void UpdateLists(Entity entity)
 		{
-			using (Lock l = this.db.Lock(entity, entity.LongList))
+			using (this.db.Lock(entity, entity.LongList))
 			{
 				entity.LongList.Add(MainClass.WORKER_NUMBER * this.pass + this.Id);
-				
-				this.WriteLockFails += l.Failures;
 			}
 			
 			Entity first = entity.ReferenceList.First();
 			
-			using (Lock l = this.db.Lock(first))
+			using (this.db.Lock(first))
 			{
 				first.Name += string.Format(", {0}", this.Id);
-				
-				this.WriteLockFails += l.Failures;
 			}
 		}
 		
 		
 		private void UpdateDictionaries(Entity entity)
 		{
-			using (Lock l = this.db.Lock(entity, entity.StringLongDictionary))
+			using (this.db.Lock(entity, entity.StringLongDictionary))
 			{
 				entity.StringLongDictionary.Add((MainClass.WORKER_NUMBER * this.pass + this.Id).ToString(), this.Id);
-				
-				this.WriteLockFails += l.Failures;
 			}
 		
 			
 			KeyValuePair<Entity, Entity> item = entity.ReferenceReferenceDictionary.First();
 			
-			using (Lock l = this.db.Lock(item.Key, item.Value, item.Value.LongList))
+			using (this.db.Lock(item.Key, item.Value, item.Value.LongList))
 			{
 				item.Key.Id++;
 				item.Value.Id--;
 				item.Value.Time = DateTime.Now;
 				item.Value.LongList.Add(this.Id);
-				
-				this.WriteLockFails += l.Failures;
 			}
 		}
 	}
