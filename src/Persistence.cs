@@ -47,6 +47,13 @@ namespace Coincidental
 			
 			return result;
 		}
+		
+		
+		public static bool Required(Type type)
+		{
+			// DateTime/TimeStamp will also get ignored since it is a struct not a class
+			return (type.IsClass || type.IsGenericType) && type != typeof(string);
+		}
 	}
 }
 		

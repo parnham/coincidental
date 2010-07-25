@@ -14,20 +14,12 @@ namespace Coincidental
 		}
 		
 		
-		private static bool RequiresPersistent(Type type)
-		{
-			// DateTime/TimeStamp will also get ignored since it is a struct not a class
-			return (type.IsClass || type.IsGenericType) && type != typeof(string);
-		}
-			
-		
-		
 		public object GetProperty(PropertyInfo property)
 		{
 			object result	= null;
 			Type type		= property.PropertyType;
 			
-			if (PersistentContainer.RequiresPersistent(type))
+			if (Persistence.Required(type))
 			{
 				object obj	= this.Read(() => property.GetValue(this.Object, null));
 				result		= this.cache.GetPersistent(type, obj);
@@ -45,7 +37,7 @@ namespace Coincidental
 			Type type		= property.PropertyType;
 			object actual 	= value;
 			
-			if (value != null && PersistentContainer.RequiresPersistent(type))
+			if (value != null && Persistence.Required(type))
 			{
 				// If target is not persistent, create a new persistent wrapper and actually store the object to the database. If the target is persistent simply retrieve its source.
 				actual = (value is IPersistence) ? (value as IPersistence).GetSource() : this.cache.GetSource(type, value);

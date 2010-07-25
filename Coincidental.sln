@@ -1,5 +1,4 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
+﻿Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coincidental", "Coincidental.csproj", "{95A44B5F-81AC-470D-9660-F047BC004606}"
 EndProject
@@ -7,20 +6,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoincidentalTest", "test\Co
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug = Debug
-		Release = Release
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug.ActiveCfg = Debug|Any CPU
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug.Build.0 = Debug|Any CPU
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Release.ActiveCfg = Release|Any CPU
-		{95A44B5F-81AC-470D-9660-F047BC004606}.Release.Build.0 = Release|Any CPU
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug.ActiveCfg = Debug
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug.Build.0 = Debug
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release.ActiveCfg = Release
-		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release.Build.0 = Release
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95A44B5F-81AC-470D-9660-F047BC004606}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D594114D-583C-4131-8532-8AFD8E6BB258}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Coincidental.csproj
+		StartupItem = test\CoincidentalTest.csproj
 	EndGlobalSection
 EndGlobal
