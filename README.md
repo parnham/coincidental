@@ -62,10 +62,13 @@ From the [Castle project][4] you will need:
   * Castle.Core.dll
   * Castle.DynamicProxy2.dll
 
-From [db4o][2] you will need:
+From [db4o][2] you will need (tested against v8.0, but be aware that the archives downloadable from the db4o site are not fully
+compatible with Mono and they need compiling manually with the MONO flag enabled):
 
+  * Cecil.FlowAnalysis.dll
   * Db4objects.Db4o.dll
   * Db4objects.Db4o.Linq.dll
+  * Mono.Cecil.dll
   * Mono.Reflection.dll
 
 Once the references are in place the project can be built. It will output the Coincidental.dll along with the references to the
@@ -87,12 +90,16 @@ will not be permitted (since db4o locks the file).
 
 ### Provider Functions
 
-  * **bool** Initialise(**string** *connectionString*, **int** *activationDepth*)
-    * *connectionString*: Should simply be the path to a db4o database.
-    * *activationDepth*: Sets the activation depth to be used by db4o (automatically honoured by the Coincidental layer).
+  * **bool** Initialise(CoincidentalConfiguration *configuration*)
+    * *configuration*: A coincidental configuration instance. Refer to the example at the bottom.
     * Returns true if successful and false if it has already been initialised.
 
 	This should be called before attempting to use any other functions, an exception will occur if you do not!
+
+
+  * static CoincidentalConfiguration Configure
+
+	Property that returns a new instance of CoincidentalConfiguration which can be modified and then passed to the Initialise function.
 
 
   * T Store< T>(T *entity*)
@@ -125,7 +132,7 @@ will not be permitted (since db4o locks the file).
 	are intercepted and proxied as persistent objects.
 
 
-  * T Get<T>(Func< T, **bool**> *expression*)
+  * T Get<T>(System.Linq.Expressions.Expression<Func< T, **bool**>> *expression*)
     * *expression*: A LINQ expression describing how to select the required entity.
     * Returns a persisted entity or null if no matching entity was found.
 
@@ -181,10 +188,34 @@ please avoid having huge lists of objects stored within other objects.
 If you attempt to modify any properties of an object without first locking it an exception will be thrown.
 
 
+### Indexing
+
+Coincidental provides an Indexed attribute which can be used to mark the properties in your entities which you wish to be indexed
+within the db4o database. These indexes are them applied at the configuration stage via an IndexConfiguration class which provides
+the following functions as a fluent-style interface:
+
+  * IndexConfiguration Add< T>()
+
+	Include the class of type T when generating indexes.
+
+  * IndexConfiguration AssemblyOf< T>()
+
+	Potentially include all classes in the same assembly as T to be indexed.
+
+  * IndexConfiguration Where(Func< Type, bool> expression)
+
+	Apply this expression to filter the classes retrieved by the AssemblyOf method. This does not affect any classes included directly
+	with the Add method.
+
+Multiple assemblies and multiple where expressions can be specified. All of the where expressions are applied to all of the assemblies!
+Refer to the example below to see how to use the index configuration.
+
+
 Example
 -------
 
-This is a quick example based around the Entity defined above:
+This is a quick example based around the Entity defined above. The activation depth is that used by db4o which is automatically
+honoured by the Coincidental layer.
 
 	using System;
 	using System.Linq;
@@ -199,9 +230,15 @@ This is a quick example based around the Entity defined above:
 		{
 			public static void Main(string [] args)
 			{
+				CoincidentalConfiguration config = Provider.Configure
+					.Connection("test.yap")
+					.ActivationDepth(1)
+					.Debugging(true)
+					.Indexing(i => i.AssemblyOf<Entity>());
+
 				using (Provider db = new Provider())
 				{
-					db.Initialise("test.yap", 1);
+					db.Initialise(config);
 					db.Store<Entity>(new Entity {
 						Name = "Test",
 						Time = DateTime.Now,

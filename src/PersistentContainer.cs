@@ -18,7 +18,7 @@ namespace Coincidental
 		{
 			object result	= null;
 			Type type		= property.PropertyType;
-			
+
 			if (Persistence.Required(type))
 			{
 				object obj	= this.Read(() => property.GetValue(this.Object, null));

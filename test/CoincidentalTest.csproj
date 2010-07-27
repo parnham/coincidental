@@ -32,12 +32,20 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="Db4objects.Db4o, Version=7.13.144.14312, Culture=neutral, PublicKeyToken=6199cd4f203aa8eb">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\references\Db4objects.Db4o.dll</HintPath>
+    </Reference>
+    <Reference Include="Db4objects.Db4o.Linq, Version=7.13.144.14312, Culture=neutral, PublicKeyToken=6199cd4f203aa8eb">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\references\Db4objects.Db4o.Linq.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\AssemblyInfo.cs" />
-    <Compile Include="src\Entity.cs" />
     <Compile Include="src\Main.cs" />
     <Compile Include="src\Worker.cs" />
+    <Compile Include="src\Entities.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

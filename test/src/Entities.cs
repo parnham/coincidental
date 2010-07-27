@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 
+using Coincidental;
+
 
 namespace CoincidentalTest
 {
 	public class Entity
 	{
+		[Indexed]
 		public virtual long Id 													{ get; set; }
 		public virtual string Name 												{ get; set; }
 		public virtual DateTime Time											{ get; set; }
@@ -27,5 +30,15 @@ namespace CoincidentalTest
 			this.ReferenceStringDictionary		= new Dictionary<Entity, string>();
 			this.ReferenceReferenceDictionary	= new Dictionary<Entity, Entity>();
 		}
+	}
+	
+	
+	public class Location
+	{
+		[Indexed]
+		public virtual int X 		{ get; set; }
+		[Indexed]
+		public virtual int Y 		{ get; set; }
+		public virtual string Name	{ get; set; }
 	}
 }

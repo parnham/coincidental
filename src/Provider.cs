@@ -32,12 +32,15 @@ namespace Coincidental
 		}
 	}
 	
+
 	
 	/// <summary>
 	/// The interface to Coincidental. 
 	/// </summary>
 	public class Provider : IDisposable
 	{
+		internal static bool Debugging { get; private set; }
+		
 		private IObjectContainer container	= null;
 		private PersistenceCache cache		= null;
 		
@@ -48,21 +51,24 @@ namespace Coincidental
 		/// <param name="connectionString">Should simply be the path to a db4o database.</param>
 		/// <param name="activationDepth">Sets the activation depth to be used by db4o (automatically honoured by the Coincidental layer).</param>
 		/// <returns>Returns true if successful and false if it has already been initialised.</returns>
-		public bool Initialise(string connectionString, int activationDepth)
+		public bool Initialise(CoincidentalConfiguration configuration)
 		{
 			if (this.container == null)
 			{
-				IEmbeddedConfiguration config	= Db4oEmbedded.NewConfiguration();
-				config.Common.UpdateDepth		= 1;
-				config.Common.ActivationDepth	= activationDepth;
-				
-				this.container	= Db4oEmbedded.OpenFile(config, connectionString);
-				this.cache		= new PersistenceCache(this.container);
+				Provider.Debugging	= configuration.DebugEnabled;
+				this.container		= Db4oEmbedded.OpenFile(configuration.Configuration, configuration.ConnectionPath);
+				this.cache			= new PersistenceCache(this.container);
 			
 				return true;
 			}
 			
 			return false;
+		}
+		
+		
+		public static CoincidentalConfiguration Configure
+		{
+			get { return new CoincidentalConfiguration(); }
 		}
 		
 		
@@ -127,9 +133,9 @@ namespace Coincidental
 		/// </summary>
 		/// <param name="expression">A LINQ expression describing how to select the required entity.</param>
 		/// <returns>Returns a persisted entity or null if no matching entity was found.</returns>
-		public T Get<T>(Func<T, bool> expression) where T : class
+		public T Get<T>(System.Linq.Expressions.Expression<Func<T, bool>> expression) where T : class
 		{
-			return this.cache.GetPersistent(typeof(T), this.container.AsQueryable<T>().SingleOrDefault(expression)) as T;
+			return this.cache.GetPersistent(typeof(T), this.container.AsQueryable<T>().Where(expression).SingleOrDefault()) as T;
 		}
 		
 		

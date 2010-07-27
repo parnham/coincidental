@@ -177,7 +177,7 @@ namespace Coincidental
 		{
 			if (!this.container.Ext().IsActive(item))
 			{
-				//Console.WriteLine("  Lazy loading:" + item.ToString());
+				if (Provider.Debugging) Console.WriteLine("  Lazy loading:" + item.ToString());
 				this.container.Activate(item, 1);	
 			}
 			

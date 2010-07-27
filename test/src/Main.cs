@@ -5,6 +5,7 @@ using System.Threading;
 using System.Collections.Generic;
 
 using Coincidental;
+using System.Diagnostics;
 
 
 namespace CoincidentalTest
@@ -16,11 +17,30 @@ namespace CoincidentalTest
 		
 		public static void Main(string [] args)
 		{
+			if (args.Length == 1)
+			{
+				switch (args[0])
+				{
+					case "indexing":	MainClass.IndexingTest();	break;
+					case "stress":		MainClass.StressTest();		break;
+				}
+			}
+			else Console.WriteLine("Invalid arguments (choose from 'indexing' or 'stress')");
+		}
+		
+		
+		private static void StressTest()
+		{
+			CoincidentalConfiguration config = Provider.Configure
+				.Connection("test.yap")
+				.ActivationDepth(1)
+				.Indexing(i => i.Add<Entity>());
+					          
 			using (Provider db = new Provider())
 			{
 				// Create new DB
 				if (File.Exists("test.yap")) File.Delete("test.yap");
-				db.Initialise("test.yap", 1);
+				db.Initialise(config);
 				
 				// Initialise DB
 				Entity entity = MainClass.GetInitialData();
@@ -32,7 +52,7 @@ namespace CoincidentalTest
 			using (Provider db = new Provider())
 			{
 				// Open DB
-				db.Initialise("test.yap", 1);
+				db.Initialise(config);
 				
 				MainClass.RunTests("Second pass", 1, db);
 			}
@@ -41,14 +61,13 @@ namespace CoincidentalTest
 			using (Provider db = new Provider())
 			{
 				// Open DB
-				db.Initialise("test.yap", 1);
+				db.Initialise(config);
 			
 				// Read results
 				Entity entity = db.Get<Entity>(e => e.Name == "Test");
 				
 				Console.WriteLine("\nEntity: ");
 				MainClass.PrintEntity(entity, 2);
-				MainClass.CheckEntity(entity);
 			}
 		}
 		
@@ -90,7 +109,7 @@ namespace CoincidentalTest
 			bool finished = false;
 			while (!finished) 
 			{
-				finished = threads.TrueForAll(t => t.ThreadState == ThreadState.Stopped);
+				finished = threads.TrueForAll(t => t.ThreadState == System.Threading.ThreadState.Stopped);
 				Thread.Sleep(1);
 			}
 			
@@ -155,11 +174,52 @@ namespace CoincidentalTest
 				entity.ReferenceReferenceDictionary.Aggregate<KeyValuePair<Entity, Entity>, string>("", (s, k) => string.Format("{0}({1}={2},{3}={4}), ", s, k.Key.Name, k.Key.Id, k.Value.Name, k.Value.Id))
 			);
 		}
-		
-		
-		private static void CheckEntity(Entity entity)
+
+
+		private static void IndexingTest()
 		{
-		}
+			CoincidentalConfiguration config = Provider.Configure
+				.Connection("test.yap")
+				.ActivationDepth(1)
+				.Debugging(true)
+				.Indexing(i => i.AssemblyOf<Location>());
+			
+			using (Provider db = new Provider())
+			{
+				if (File.Exists("test.yap")) File.Delete("test.yap");
+				db.Initialise(config);
+				
+				Console.WriteLine("Preparing data...");
+				
+				for (int y = 0; y<100; y++)
+				{
+					for (int x = 0; x<100; x++)
+					{
+						db.Store(new Location { X = x, Y = y, Name = string.Format("{0}, {1}", x, y) });
+					}
+				}
+			}
+			
+			using (Provider db = new Provider())
+			{
+				Random random = new Random();
+				db.Initialise(config);
+				
+				Stopwatch stopwatch = new Stopwatch();
+				Console.WriteLine("Beginning query...");
+
+				for (int i=0; i<10; i++)
+				{
+					stopwatch.Reset();
+					stopwatch.Start();
+
+					Location loc = db.Get<Location>(l => l.X == random.Next(99) && l.Y == random.Next(99));
+					
+					stopwatch.Stop();
+					Console.WriteLine("Query found: {0} ({1} ms) {2}", loc.Name, stopwatch.ElapsedMilliseconds, loc is IPersistence);
+				}
+			}
+		}			
 	}
 }
 

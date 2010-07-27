@@ -50,12 +50,16 @@ namespace Coincidental
 		
 		public bool Lock(bool wait)
 		{
+			if (Provider.Debugging) Console.WriteLine("Coincidental: Locking {0} ({1})", this.Object, this.Id);
+			
 			return this.objectLock.TryEnterWriteLock(wait ? -1 : LOCK_TIMEOUT);	
 		}
 		
 		
 		public void Unlock()
 		{
+			if (Provider.Debugging) Console.WriteLine("Coincidental: Unlocking {0} ({1})", this.Object, this.Id);
+			
 			if (this.objectLock.IsWriteLockHeld) this.objectLock.ExitWriteLock();
 		}
 		
