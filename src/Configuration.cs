@@ -1,4 +1,4 @@
-//	Coincidental
+//  Coincidental
 //  Copyright (C) 2010 Dan Parnham
 //
 //  This program is free software: you can redistribute it and/or modify
@@ -81,6 +81,7 @@ namespace Coincidental
 				result.Common.ActivationDepth		= this.activationDepth;
 				result.Common.OptimizeNativeQueries	= true;
 				result.Common.MessageLevel			= this.debugging ? 1 : 0;
+				result.Common.Queries.EvaluationMode(QueryEvaluationMode.Immediate);
 
 				foreach (Type clazz in this.indexing.Classes) result.Common.IndexClass(clazz);
 				

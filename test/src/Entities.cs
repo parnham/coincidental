@@ -36,6 +36,8 @@ namespace CoincidentalTest
 	public class Location
 	{
 		[Indexed]
+		public virtual ulong Index	{ get; set; }
+		[Indexed]
 		public virtual int X 		{ get; set; }
 		[Indexed]
 		public virtual int Y 		{ get; set; }

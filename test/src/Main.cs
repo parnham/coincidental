@@ -23,9 +23,10 @@ namespace CoincidentalTest
 				{
 					case "indexing":	MainClass.IndexingTest();	break;
 					case "stress":		MainClass.StressTest();		break;
+					case "query":		MainClass.QueryTest();		break;
 				}
 			}
-			else Console.WriteLine("Invalid arguments (choose from 'indexing' or 'stress')");
+			else Console.WriteLine("Invalid arguments (choose from 'indexing', 'stress' or 'query')");
 		}
 		
 		
@@ -191,11 +192,11 @@ namespace CoincidentalTest
 				
 				Console.WriteLine("Preparing data...");
 				
-				for (int y = 0; y<100; y++)
+				for (int y = 0; y<200; y++)
 				{
-					for (int x = 0; x<100; x++)
+					for (int x = 0; x<200; x++)
 					{
-						db.Store(new Location { X = x, Y = y, Name = string.Format("{0}, {1}", x, y) });
+						db.Store(new Location { X = x, Y = y, Index = ((ulong)x << 32) | (ulong)y,  Name = string.Format("{0}, {1}", x, y) });
 					}
 				}
 			}
@@ -213,13 +214,85 @@ namespace CoincidentalTest
 					stopwatch.Reset();
 					stopwatch.Start();
 
-					Location loc = db.Get<Location>(l => l.X == random.Next(99) && l.Y == random.Next(99));
+					Location loc = db.Get<Location>(l => l.X == random.Next(199) && l.Y == random.Next(199));
+					
+					stopwatch.Stop();
+					Console.WriteLine("Query found: {0} ({1} ms) {2}", loc.Name, stopwatch.ElapsedMilliseconds, loc is IPersistence);
+				}
+				
+				Console.WriteLine("Beginning query with index...");
+
+				for (int i=0; i<10; i++)
+				{
+					stopwatch.Reset();
+					stopwatch.Start();
+					
+					ulong index = ((ulong)random.Next(199) << 32) | (ulong)random.Next(199);
+
+					Location loc = db.Get<Location>(l => l.Index == index);
 					
 					stopwatch.Stop();
 					Console.WriteLine("Query found: {0} ({1} ms) {2}", loc.Name, stopwatch.ElapsedMilliseconds, loc is IPersistence);
 				}
 			}
-		}			
+		}
+		
+		
+		private static void QueryTest()
+		{
+			CoincidentalConfiguration config = Provider.Configure
+				.Connection("test.yap")
+				.ActivationDepth(1)
+				.Debugging(true)
+				.Indexing(i => i.AssemblyOf<Location>());
+			
+			
+			using (Provider db = new Provider())
+			{
+				if (File.Exists("test.yap")) File.Delete("test.yap");
+				db.Initialise(config);
+				
+				Console.WriteLine("Preparing data...");
+				
+				for (int y = 0; y<100; y++)
+				{
+					for (int x = 0; x<100; x++)
+					{
+						db.Store(new Location { X = x, Y = y, Name = string.Format("{0}, {1}", x, y) });
+					}
+				}
+			}
+			
+			using (Provider db = new Provider())
+			{
+				db.Initialise(config);
+				
+				List<QueryWorker> workers	= new List<QueryWorker>();
+				List<Thread> threads		= new List<Thread>();
+				
+				for (int i=0; i<WORKER_NUMBER; i++)
+				{
+					QueryWorker worker = new QueryWorker(i, db);
+					workers.Add(worker);
+					threads.Add(new Thread(worker.Work));
+				}
+				
+				Console.WriteLine("Running query test...");
+				
+				// Run workers
+				threads.ForEach(t => t.Start());
+				
+				bool finished = false;
+				while (!finished) 
+				{
+					finished = threads.TrueForAll(t => t.ThreadState == System.Threading.ThreadState.Stopped);
+					Thread.Sleep(1);
+				}
+				
+				Console.WriteLine("  Min:  {0} ms", workers.Min(w => w.TimeTaken));
+				Console.WriteLine("  Max:  {0} ms", workers.Max(w => w.TimeTaken));
+				Console.WriteLine("  Mean: {0} ms", workers.Average(w => w.TimeTaken));
+			}
+		}
 	}
 }
-

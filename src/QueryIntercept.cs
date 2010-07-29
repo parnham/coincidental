@@ -1,4 +1,4 @@
-//	Coincidental
+//  Coincidental
 //  Copyright (C) 2010 Dan Parnham
 //
 //  This program is free software: you can redistribute it and/or modify
@@ -99,9 +99,9 @@ namespace Coincidental
 			
 			if ( (type.IsClass || type.IsGenericType) && type != typeof(string))
 			{
-				List<T> result	= new List<T>();
-				
-				foreach(T item in this.source.CreateQuery<T>(expression))
+				List<T> result = new List<T>();
+
+				foreach (T item in this.source.CreateQuery<T>(expression))
 				{
 					result.Add((T)this.cache.GetPersistent(type, item));
 				}

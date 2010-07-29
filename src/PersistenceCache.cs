@@ -1,4 +1,4 @@
-//	Coincidental
+//  Coincidental
 //  Copyright (C) 2010 Dan Parnham
 //
 //  This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,7 @@ namespace Coincidental
 {
 	internal class PersistenceCache : IDisposable
 	{
+		public object QueryLock { get; private set; }
 		private IObjectContainer container;
 		private IDictionary<long, PersistentBase> cache = new SortedDictionary<long, PersistentBase>();
 		
@@ -34,6 +35,7 @@ namespace Coincidental
 		public PersistenceCache(IObjectContainer container)
 		{
 			this.container	= container;
+			this.QueryLock	= new object();
 		}
 		
 		

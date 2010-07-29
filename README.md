@@ -65,10 +65,8 @@ From the [Castle project][4] you will need:
 From [db4o][2] you will need (tested against v8.0, but be aware that the archives downloadable from the db4o site are not fully
 compatible with Mono and they need compiling manually with the MONO flag enabled):
 
-  * Cecil.FlowAnalysis.dll
   * Db4objects.Db4o.dll
   * Db4objects.Db4o.Linq.dll
-  * Mono.Cecil.dll
   * Mono.Reflection.dll
 
 Once the references are in place the project can be built. It will output the Coincidental.dll along with the references to the

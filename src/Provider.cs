@@ -1,4 +1,4 @@
-//	Coincidental
+//  Coincidental
 //  Copyright (C) 2010 Dan Parnham
 //
 //  This program is free software: you can redistribute it and/or modify
