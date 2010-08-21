@@ -55,7 +55,9 @@ namespace Coincidental
 	/// </summary>
 	public class Provider : IDisposable
 	{
-		internal static bool Debugging { get; private set; }
+		internal static bool Debugging 		{ get; private set; }
+		internal static bool OrphanPurge	{ get; private set; }
+		internal static int CacheLife		{ get; private set; }
 		
 		private IObjectContainer container	= null;
 		private PersistenceCache cache		= null;
@@ -71,9 +73,11 @@ namespace Coincidental
 		{
 			if (this.container == null)
 			{
-				Provider.Debugging	= configuration.DebugEnabled;
-				this.container		= Db4oEmbedded.OpenFile(configuration.Configuration, configuration.ConnectionPath);
-				this.cache			= new PersistenceCache(this.container);
+				Provider.Debugging		= configuration.DebugEnabled;
+				Provider.OrphanPurge	= configuration.OrphanPurgeEnabled;
+				Provider.CacheLife		= configuration.CacheLife;
+				this.container			= Db4oEmbedded.OpenFile(configuration.Configuration, configuration.ConnectionPath);
+				this.cache				= new PersistenceCache(this.container);
 			
 				return true;
 			}

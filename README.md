@@ -189,7 +189,7 @@ If you attempt to modify any properties of an object without first locking it an
 ### Indexing
 
 Coincidental provides an Indexed attribute which can be used to mark the properties in your entities which you wish to be indexed
-within the db4o database. These indexes are them applied at the configuration stage via an IndexConfiguration class which provides
+within the db4o database. These indexes are then applied at the configuration stage via an IndexConfiguration class which provides
 the following functions as a fluent-style interface:
 
   * IndexConfiguration Add< T>()
@@ -207,6 +207,22 @@ the following functions as a fluent-style interface:
 
 Multiple assemblies and multiple where expressions can be specified. All of the where expressions are applied to all of the assemblies!
 Refer to the example below to see how to use the index configuration.
+
+
+### Orphan Tracking
+
+Coincidental can support automatic orphan tracking and purging which is essentially a form of garbage collection for db4o. Since
+an entity within a game may be referenced in many places, it can be difficult to know when that entity can be safely deleted from
+the underlying database.
+
+To indicate that a specific class should be tracked it should implement the interface IOrphanTracked which requires it to have
+the property "**long** ReferenceCount { **get**; **set**; }".
+
+The value of ReferenceCount will be automatically zeroed when a tracked object is stored. Once you are using a persistent
+instance of the object, reading of the ReferenceCount works as expected but a write will result in an exception since ReferenceCount
+modification is only permitted internally.
+
+Automatic purging of orphaned objects during a call to Flush can be enabled with the configuration option "AutomaticOrphanPurge".
 
 
 Example
@@ -231,7 +247,7 @@ honoured by the Coincidental layer.
 				CoincidentalConfiguration config = Provider.Configure
 					.Connection("test.yap")
 					.ActivationDepth(1)
-					.Debugging(true)
+					.Debugging
 					.Indexing(i => i.AssemblyOf<Entity>());
 
 				using (Provider db = new Provider())

@@ -63,6 +63,7 @@
     <Compile Include="src\Provider.cs" />
     <Compile Include="src\Indexing.cs" />
     <Compile Include="src\Configuration.cs" />
+    <Compile Include="src\Interfaces.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

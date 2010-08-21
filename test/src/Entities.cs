@@ -19,6 +19,7 @@ namespace CoincidentalTest
 		public virtual IDictionary<long, Entity> LongReferenceDictionary		{ get; set; }
 		public virtual IDictionary<Entity, string> ReferenceStringDictionary	{ get; set; }
 		public virtual IDictionary<Entity, Entity> ReferenceReferenceDictionary	{ get; set; }
+		//public string NonVirtualTest { get; set; }
 		
 		
 		public Entity()
@@ -42,5 +43,26 @@ namespace CoincidentalTest
 		[Indexed]
 		public virtual int Y 		{ get; set; }
 		public virtual string Name	{ get; set; }
+	}
+	
+	
+	public class UnTracked
+	{
+		public virtual string Name 				{ get; set; }
+		public virtual Tracked Item 			{ get; set; }
+		public virtual IList<Tracked> ItemList	{ get; set; }
+		
+		
+		public UnTracked()
+		{
+			this.ItemList = new List<Tracked>();
+		}
+	}
+	
+	
+	public class Tracked : IOrphanTracked
+	{
+		public virtual long ReferenceCount { get; set; }
+		public virtual string Name { get; set; }
 	}
 }

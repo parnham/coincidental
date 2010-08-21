@@ -33,9 +33,10 @@ namespace Coincidental
 		
 		public PersistentList(long id, IList<T> source, PersistenceCache cache) : base(id, source, cache)
 		{
-			this.type 				= typeof(T);
+			this.type 				= typeof(T);		
 			this.source				= source;
 			this.isClass			= (this.type.IsClass || this.type.IsGenericType) && this.type != typeof(string);
+			this.orphanTracked		= this.isClass ? typeof(IOrphanTracked).IsAssignableFrom(this.type) : false;
 			this.PersistentObject	= this;
 			
 			if (this.isClass)
@@ -80,6 +81,8 @@ namespace Coincidental
 
 				this.source.Insert(index, (T)persistent.Object);
 				this.persistent.Insert(index, (T)persistent.PersistentObject);
+				
+				if (this.orphanTracked) persistent.Reference();
 			}
 			else this.source.Insert(index, item);
 		}
@@ -101,8 +104,15 @@ namespace Coincidental
 				if (this.isClass)
 				{
 					IPersistentBase persistent	= this.GetBase(this.type, value);
-					this.source[index]			= (T)persistent.Object;
-					this.persistent[index]		= (T)persistent.PersistentObject;
+					
+					if (this.orphanTracked) 
+					{
+						(this.persistent[index] as IPersistence).UnReference();
+						persistent.Reference();
+					}
+
+					this.source[index]		= (T)persistent.Object;
+					this.persistent[index]	= (T)persistent.PersistentObject;
 				}
 				else this.source[index] = value;
 			}
@@ -121,6 +131,8 @@ namespace Coincidental
 
 				this.source.Add((T)persistent.Object);
 				this.persistent.Add((T)persistent.PersistentObject);
+				
+				if (this.orphanTracked) persistent.Reference();
 			}
 			else this.source.Add(item);
 		}
@@ -131,7 +143,12 @@ namespace Coincidental
 			this.AssertWrite();
 			
 			this.source.Clear();
-			if (this.isClass) this.persistent.Clear();
+			
+			if (this.isClass) 
+			{
+				if (this.orphanTracked) foreach (var item in this.persistent.Cast<IPersistence>()) item.UnReference();
+				this.persistent.Clear();
+			}
 		}
 
 		
@@ -173,7 +190,11 @@ namespace Coincidental
 			this.AssertWrite();
 			
 			this.source.RemoveAt(index);
-			if (this.isClass) this.persistent.RemoveAt(index);
+			if (this.isClass) 
+			{
+				if (this.orphanTracked) (this.persistent[index] as IPersistence).UnReference();
+				this.persistent.RemoveAt(index);
+			}
 		}
 		
 

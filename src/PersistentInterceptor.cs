@@ -50,6 +50,8 @@ namespace Coincidental
 				{
 					case "GetSource": 	invocation.ReturnValue = this.container.Object;	break;
 					case "GetBase":		invocation.ReturnValue = this.container;		break;
+					case "Reference":	this.container.Reference();						break;
+					case "UnReference":	this.container.UnReference();					break;
 				}
 			}
 

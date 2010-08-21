@@ -30,6 +30,8 @@ namespace Coincidental
 		private bool isKeyClass;
 		private bool isValueClass;
 		private bool isClass;
+		private bool orphanTrackedKey;
+		private bool orphanTrackedValue;
 		private Type keyType;
 		private Type valueType;
 		
@@ -49,6 +51,8 @@ namespace Coincidental
 			this.isKeyClass			= (this.keyType.IsClass		|| this.keyType.IsGenericType)		&& this.keyType		!= typeof(string);
 			this.isValueClass		= (this.valueType.IsClass	|| this.valueType.IsGenericType)	&& this.valueType	!= typeof(string);
 			this.isClass			= this.isKeyClass || this.isValueClass;
+			this.orphanTrackedKey	= this.isKeyClass ? typeof(IOrphanTracked).IsAssignableFrom(this.keyType) : false;
+			this.orphanTrackedValue	= this.isValueClass ? typeof(IOrphanTracked).IsAssignableFrom(this.valueType) : false;
 			this.PersistentObject	= this;
 			
 			if (this.isClass)
@@ -121,6 +125,9 @@ namespace Coincidental
 				
 				this.source.Add(item.Source);
 				this.persistent.Add(item.Persistent);
+				
+				if (this.orphanTrackedKey)		(item.Persistent.Key as IPersistence).Reference();
+				if (this.orphanTrackedValue)	(item.Persistent.Value as IPersistence).Reference();
 			}
 			else this.source.Add(key, value);
 		}
@@ -138,8 +145,27 @@ namespace Coincidental
 				
 			if (this.isClass)	
 			{
-				if (this.isKeyClass) 	return (key is IPersistence) ? this.source.Remove((TKey)(key as IPersistence).GetSource()) && this.persistent.Remove(key) : false;
-				else 					return this.source.Remove(key) && this.persistent.Remove(key);
+				if (this.persistent.ContainsKey(key))
+				{
+					if (this.isKeyClass) 	
+					{
+						if (key is IPersistence)
+						{
+							if (this.orphanTrackedValue) 	(this.persistent[key] as IPersistence).UnReference();
+							if (this.orphanTrackedKey)		(key as IPersistence).UnReference();	
+							
+							return this.source.Remove((TKey)(key as IPersistence).GetSource()) && this.persistent.Remove(key);
+						}
+						else return false;
+					}
+					else 					
+					{
+						if (this.orphanTrackedValue) (this.persistent[key] as IPersistence).UnReference();
+						
+						return this.source.Remove(key) && this.persistent.Remove(key);
+					}
+				}
+				else return false;
 			}
 			else return this.source.Remove(key);
 		}
@@ -169,7 +195,14 @@ namespace Coincidental
 				
 				if (this.isClass)
 				{
-					KeyValueSet item						= this.GetSet(key, value);
+					KeyValueSet item = this.GetSet(key, value);
+					
+					if (this.orphanTrackedValue)
+					{
+						(this.persistent[item.Persistent.Key] as IPersistence).UnReference();
+						(item.Persistent.Value as IPersistence).Reference();
+					}		
+					
 					this.source[item.Source.Key] 			= item.Source.Value;
 					this.persistent[item.Persistent.Key]	= item.Persistent.Value;
 				}
@@ -222,6 +255,9 @@ namespace Coincidental
 				
 				this.source.Add(kvs.Source);
 				this.persistent.Add(kvs.Persistent);
+				
+				if (this.orphanTrackedKey) 		(kvs.Persistent.Key as IPersistence).Reference();
+				if (this.orphanTrackedValue)	(kvs.Persistent.Value as IPersistence).Reference();
 			}
 			else this.source.Add(item);
 		}
@@ -232,7 +268,12 @@ namespace Coincidental
 			this.AssertWrite();
 			
 			this.source.Clear();
-			if (this.isClass) this.persistent.Clear();
+			if (this.isClass) 
+			{
+				if (this.orphanTrackedKey) 		foreach (var key in this.persistent.Keys.Cast<IPersistence>())		key.UnReference();
+				if (this.orphanTrackedValue)	foreach(var value in this.persistent.Values.Cast<IPersistence>()) 	value.UnReference();
+				this.persistent.Clear();
+			}
 		}
 		
 		
@@ -260,6 +301,9 @@ namespace Coincidental
 			if (this.isClass)
 			{
 				KeyValueSet kvs = this.GetSet(item.Key, item.Value);
+				
+				if (this.orphanTrackedKey)		(kvs.Persistent.Key as IPersistence).UnReference();
+				if (this.orphanTrackedValue)	(kvs.Persistent.Value as IPersistence).UnReference();
 				
 				return this.source.Remove(kvs.Source) && this.persistent.Remove(kvs.Persistent);
 			}

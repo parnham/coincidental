@@ -24,6 +24,8 @@ namespace Coincidental
 {
 	internal class PersistentContainer : PersistentBase
 	{
+		private static Type orphanType = typeof(IOrphanTracked);
+		
 		public PersistentContainer(Type type, long id, object source, PersistenceCache cache) : base(id, source, cache)
 		{
 			this.PersistentObject = Persistence.Create(type, this);
@@ -49,14 +51,34 @@ namespace Coincidental
 		public void SetProperty(PropertyInfo property, object value)
 		{	
 			this.AssertWrite();
+			
+			if (this.orphanTracked && property.Name == "ReferenceCount")
+			{
+				throw new Exception("Attempt to modify the reference count of an orphan tracked persistent object");
+			}
 
 			Type type		= property.PropertyType;
 			object actual 	= value;
 			
-			if (value != null && Persistence.Required(type))
+			if (Persistence.Required(type))
 			{
-				// If target is not persistent, create a new persistent wrapper and actually store the object to the database. If the target is persistent simply retrieve its source.
-				actual = (value is IPersistence) ? (value as IPersistence).GetSource() : this.cache.GetSource(type, value);
+				bool orphanTracked = orphanType.IsAssignableFrom(type);
+				
+				if (orphanTracked)
+				{
+					object current = property.GetValue(this.Object, null);
+					if (current != null) this.cache.GetBase(type, current).UnReference();
+				}
+			
+				if (value != null)
+				{
+					// If target is not persistent, create a new persistent wrapper and actually store the object to the database. If the target is persistent simply retrieve its source.
+					//actual = (value is IPersistence) ? (value as IPersistence).GetSource() : this.cache.GetSource(type, value);
+					IPersistentBase persistent	= (value is IPersistence) ? (value as IPersistence).GetBase() : this.cache.GetBase(type, value);
+					actual						= persistent.Object;
+					
+					if (orphanTracked) persistent.Reference();
+				}
 			}
 			
 			property.SetValue(this.Object, actual, null);

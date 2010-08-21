@@ -25,17 +25,13 @@ using Db4objects.Db4o.Config;
 
 namespace Coincidental
 {
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class IndexedAttribute : Attribute
-    {
-    }
-	
-	
 	public class CoincidentalConfiguration
 	{
 		private string connection 			= string.Empty;
 		private int activationDepth 		= 2;
 		private bool debugging				= false;
+		private bool orphanPurge			= false;
+		private int cacheLife				= 600;
 		private IndexConfiguration indexing	= new IndexConfiguration();
 		
 		
@@ -58,9 +54,29 @@ namespace Coincidental
 		}
 		
 		
-		public CoincidentalConfiguration Debugging(bool enable)
+		public CoincidentalConfiguration Debugging
 		{
-			this.debugging = enable;
+			get
+			{
+				this.debugging = true;
+				return this;
+			}
+		}
+		
+		
+		public CoincidentalConfiguration AutomaticOrphanPurge
+		{
+			get
+			{
+				this.orphanPurge = true;	
+				return this;
+			}
+		}
+		
+		
+		public CoincidentalConfiguration Cache(int lifetimeSeconds)
+		{
+			this.cacheLife = lifetimeSeconds;
 			return this;
 		}
 		
@@ -93,6 +109,17 @@ namespace Coincidental
 		internal bool DebugEnabled
 		{
 			get { return this.debugging; }
+		}
+		
+		
+		internal bool OrphanPurgeEnabled
+		{
+			get { return this.orphanPurge; }
+		}
+		
+		internal int CacheLife
+		{
+			get { return this.cacheLife; }
 		}
 		
 		

@@ -24,9 +24,10 @@ namespace CoincidentalTest
 					case "indexing":	MainClass.IndexingTest();	break;
 					case "stress":		MainClass.StressTest();		break;
 					case "query":		MainClass.QueryTest();		break;
+					case "orphan":		MainClass.OrphanTest();		break;
 				}
 			}
-			else Console.WriteLine("Invalid arguments (choose from 'indexing', 'stress' or 'query')");
+			else Console.WriteLine("Invalid arguments (choose from 'indexing', 'stress', 'query' or 'orphan')");
 		}
 		
 		
@@ -182,7 +183,7 @@ namespace CoincidentalTest
 			CoincidentalConfiguration config = Provider.Configure
 				.Connection("test.yap")
 				.ActivationDepth(1)
-				.Debugging(true)
+				.Debugging
 				.Indexing(i => i.AssemblyOf<Location>());
 			
 			using (Provider db = new Provider())
@@ -243,7 +244,7 @@ namespace CoincidentalTest
 			CoincidentalConfiguration config = Provider.Configure
 				.Connection("test.yap")
 				.ActivationDepth(1)
-				.Debugging(true)
+				.Debugging
 				.Indexing(i => i.AssemblyOf<Location>());
 			
 			
@@ -292,6 +293,83 @@ namespace CoincidentalTest
 				Console.WriteLine("  Min:  {0} ms", workers.Min(w => w.TimeTaken));
 				Console.WriteLine("  Max:  {0} ms", workers.Max(w => w.TimeTaken));
 				Console.WriteLine("  Mean: {0} ms", workers.Average(w => w.TimeTaken));
+			}
+		}
+		
+		
+		private static void OrphanTest()
+		{
+			CoincidentalConfiguration config = Provider.Configure
+				.Connection("test.yap")
+				.ActivationDepth(1)
+				.Debugging;
+			
+			
+			using (Provider db = new Provider())
+			{
+				if (File.Exists("test.yap")) File.Delete("test.yap");
+				db.Initialise(config);
+				
+				UnTracked untracked = db.Store(new UnTracked { Name = "UnTracked" });
+				Tracked tracked		= db.Store(new Tracked { Name = "Tracked", ReferenceCount = 10 });
+				
+				Console.WriteLine("Initial reference count = {0}", tracked.ReferenceCount);
+				
+				try
+				{
+					using (db.Lock(tracked)) tracked.ReferenceCount = 10;
+				}
+				catch(Exception e)
+				{
+					Console.WriteLine("Exception caught: {0}", e.Message);
+				}
+				
+				using (db.Lock(untracked)) untracked.Item = tracked;
+				Console.WriteLine("Single reference added, count = {0}", tracked.ReferenceCount);
+				
+				using (db.Lock(untracked.ItemList)) untracked.ItemList.Add(tracked);
+				Console.WriteLine("Added to list, count = {0}", tracked.ReferenceCount);
+				
+				using (db.Lock(untracked)) untracked.Item = null;
+				Console.WriteLine("Single reference removed, count = {0}", tracked.ReferenceCount);
+			}
+			
+			using (Provider db = new Provider())
+			{
+				db.Initialise(config);
+				
+				UnTracked untracked = db.Get<UnTracked>(u => u.Name == "UnTracked");
+				Tracked tracked		= db.Get<Tracked>(t => t.Name == "Tracked");
+				
+				Console.WriteLine("Closed and opened new provider, count = {0}", tracked.ReferenceCount);
+				
+				using (db.Lock(untracked.ItemList)) untracked.ItemList.Remove(tracked);
+				Console.WriteLine("Removed from list, count = {0}", tracked.ReferenceCount);
+				
+				using (db.Lock(untracked)) untracked.Item = tracked;
+				Console.WriteLine("Single reference added, count = {0}", tracked.ReferenceCount);
+			}
+			
+			config = config.AutomaticOrphanPurge;
+			
+			using (Provider db = new Provider())
+			{
+				db.Initialise(config);
+				
+				UnTracked untracked = db.Get<UnTracked>(u => u.Name == "UnTracked");
+				Tracked tracked		= db.Get<Tracked>(t => t.Name == "Tracked");
+				
+				Console.WriteLine("Closed and opened new provider with automatic orphan purge enabled, count = {0}", tracked.ReferenceCount);
+				
+				using (db.Lock(untracked)) untracked.Item = null;
+				Console.WriteLine("Single reference removed, count = {0}", tracked.ReferenceCount);
+				
+				db.Flush();
+				
+				tracked = db.Get<Tracked>(t => t.Name == "Tracked");
+				
+				if (tracked == null) 	Console.WriteLine("Attempted to re-acquire tracked item, but it was successfully purged");
+				else 					Console.WriteLine("Managed to re-acquire tracked item, automatic purging failed!");
 			}
 		}
 	}

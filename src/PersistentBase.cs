@@ -21,26 +21,15 @@ using System.Threading;
 
 namespace Coincidental
 {
-	public interface IPersistentBase
-	{
-		long Id 				{ get; }
-		object Object			{ get; }	
-		object PersistentObject	{ get; }
-		
-		bool Lock(bool wait);
-		void Unlock();
-	}
-	
-	
 	internal abstract class PersistentBase : IPersistentBase
 	{
 		private static int LOCK_TIMEOUT = 2; 	// Milliseconds
-		private static int CACHE_LIFE	= 600;	// Seconds
 
+		protected bool orphanTracked;
 		protected PersistenceCache cache;
-		protected ReaderWriterLockSlim objectLock = new ReaderWriterLockSlim();
-		
-		public long Id					{ get; set; }
+		protected ReaderWriterLockSlim objectLock	= new ReaderWriterLockSlim();
+
+		public long Id					{ get; private set; }
 		public bool Dirty				{ get; set; }
 		public DateTime Access			{ get; set; }
 		public object Object			{ get; set; }	
@@ -54,13 +43,46 @@ namespace Coincidental
 			this.Object				= source;
 			this.PersistentObject	= this;
 			this.Access				= DateTime.Now;
+			this.orphanTracked		= source is IOrphanTracked;	
 			this.cache				= cache;
 		}
 		
 		
+		public void Reference()
+		{
+			lock(this)
+			{
+				(this.Object as IOrphanTracked).ReferenceCount++;
+				this.Dirty = true;
+			}
+		}
+		
+		
+		public void UnReference()
+		{
+			lock(this)
+			{
+				(this.Object as IOrphanTracked).ReferenceCount--;
+				this.Dirty = true;
+			}
+		}
+		
+		
+		public bool Orphaned
+		{
+			get
+			{
+				lock(this)
+				{
+					return (this.Object as IOrphanTracked).ReferenceCount == 0;
+				}
+			}
+		}
+
+		
 		public bool Expired
 		{
-			get { return (DateTime.Now - this.Access).Seconds > CACHE_LIFE; }
+			get { return (DateTime.Now - this.Access).Seconds > Provider.CacheLife; }
 		}
 		
 		
@@ -84,7 +106,7 @@ namespace Coincidental
 		{
 			if (!this.objectLock.IsWriteLockHeld) throw new Exception("Attempted to modify an unlocked persistent object");
 			
-			this.Dirty = true;
+			lock(this) this.Dirty = true;
 		}
 		
 		

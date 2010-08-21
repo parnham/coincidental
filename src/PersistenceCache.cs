@@ -104,6 +104,8 @@ namespace Coincidental
 				
 				Type type = item.GetType();
 				
+				if (item is IOrphanTracked) (item as IOrphanTracked).ReferenceCount = 0;
+				
 				if (type.IsGenericType)
 				{
 					// Ignoring lists and dictionaries?
@@ -250,6 +252,8 @@ namespace Coincidental
 			// remove them from the cache so that they can be garbage collected.
 			List<PersistentBase> flush	= new List<PersistentBase>();
 			List<long> delete			= new List<long>();
+			List<object> orphans		= new List<object>();
+			bool purge					= Provider.OrphanPurge;
 			
 			lock(this)
 			{ 
@@ -257,18 +261,37 @@ namespace Coincidental
 				{
 					if (item.Value.Dirty)	flush.Add(item.Value);
 					if (item.Value.Expired)	delete.Add(item.Key);
+					
+					if (purge && item.Value.Object is IOrphanTracked)
+					{
+						if ((item.Value.Object as IOrphanTracked).ReferenceCount == 0) 
+						{
+							if (item.Value.Dirty) 		flush.Remove(item.Value);
+							if (!item.Value.Expired)	delete.Add(item.Key);
+							orphans.Add(item.Value.Object);
+						}
+					}
 				}
 				
+				if (Provider.Debugging && delete.Any()) Console.WriteLine("Coincidental: Removing {0} expired items from cache", delete.Count);
 				foreach (long id in delete) this.cache.Remove(id);
 			}
 			
+			if (Provider.Debugging && flush.Any()) Console.WriteLine("Coincidental: Flushing {0} entities to disk", flush.Count);
 			foreach (PersistentBase item in flush)
 			{
-				item.Lock(true);
-					this.container.Store(item.Object);
+				lock(item)
+				{
+					item.Lock(true);
+						this.container.Store(item.Object);
+					item.Unlock();
 					item.Dirty = false;
-				item.Unlock();
+				}
 			}
+			
+			if (Provider.Debugging && orphans.Any()) Console.WriteLine("Coincidental: Purging {0} orphan(s)", orphans.Count);
+			foreach (object item in orphans) this.container.Delete(item);
+			
 			this.container.Commit();
 		}
 	}

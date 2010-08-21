@@ -22,22 +22,28 @@ using Castle.DynamicProxy;
 
 namespace Coincidental
 {
-	public interface IPersistence
-	{
-		object GetSource();
-		IPersistentBase GetBase();
-	}
-	
-	
 	internal class PersistentProxyGeneration : IProxyGenerationHook
 	{
 		public bool ShouldInterceptMethod(Type type, MethodInfo method)
 		{
-			return ReflectHelper.IsGetter(method) || ReflectHelper.IsSetter(method) || method.Name == "GetSource" || method.Name == "GetBase";	
+			return true; //ReflectHelper.IsGetter(method) || ReflectHelper.IsSetter(method) || method.Name == "GetSource" || method.Name == "GetBase";	
 		}
 		
 		
-		public void NonVirtualMemberNotification(Type type, MemberInfo memberInfo) {}
+		public void NonVirtualMemberNotification(Type type, MemberInfo memberInfo) 
+		{
+			MethodInfo method = memberInfo as MethodInfo;
+			
+			if (ReflectHelper.IsGetter(method) || ReflectHelper.IsSetter(method))
+			{
+				throw new Exception(string.Format(
+					"Error attempting to access property {0} in persistent object, property is not virtual!", 
+					ReflectHelper.GetPropertyName(method)
+				));
+			}
+		}
+		
+		
 		public void MethodsInspected() {}
 	}
 	
