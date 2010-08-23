@@ -25,6 +25,7 @@ namespace Coincidental
 	{
 		private static int LOCK_TIMEOUT = 2; 	// Milliseconds
 
+		
 		protected bool orphanTracked;
 		protected PersistenceCache cache;
 		protected ReaderWriterLockSlim objectLock	= new ReaderWriterLockSlim();
@@ -66,6 +67,9 @@ namespace Coincidental
 				this.Dirty = true;
 			}
 		}
+		
+		
+		public abstract void UnReferenceMembers();
 		
 		
 		public bool Orphaned

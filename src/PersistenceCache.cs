@@ -143,8 +143,12 @@ namespace Coincidental
 							
 							if (value != null)
 							{
-								if (value is IPersistence)	property.SetValue(item, (value as IPersistence).GetSource(), null);
-								else 						this.UnPersist(value, seen);
+								if (value is IPersistence)	
+								{
+									if (value is IOrphanTracked) (value as IPersistence).Reference();
+									property.SetValue(item, (value as IPersistence).GetSource(), null);
+								}
+								else this.UnPersist(value, seen);
 							}
 						}
 					}
@@ -211,6 +215,7 @@ namespace Coincidental
 			{
 				lock(this)
 				{
+					item.GetBase().UnReferenceMembers();
 					this.container.Delete(item.GetSource());
 					this.cache.Remove(item.GetBase().Id);
 				}
@@ -232,6 +237,7 @@ namespace Coincidental
 				{
 					foreach (IPersistence item in items)
 					{
+						item.GetBase().UnReferenceMembers();
 						this.container.Delete(item.GetSource());
 						this.cache.Remove(item.GetBase().Id);
 					}
@@ -250,10 +256,10 @@ namespace Coincidental
 			// Flush dirty items to db4o.
 			// Check for objects that have not been accessed for some time and 
 			// remove them from the cache so that they can be garbage collected.
-			List<PersistentBase> flush	= new List<PersistentBase>();
-			List<long> delete			= new List<long>();
-			List<object> orphans		= new List<object>();
-			bool purge					= Provider.OrphanPurge;
+			List<PersistentBase> flush		= new List<PersistentBase>();
+			List<long> delete				= new List<long>();
+			List<PersistentBase> orphans	= new List<PersistentBase>();
+			bool purge						= Provider.OrphanPurge;
 			
 			lock(this)
 			{ 
@@ -264,11 +270,11 @@ namespace Coincidental
 					
 					if (purge && item.Value.Object is IOrphanTracked)
 					{
-						if ((item.Value.Object as IOrphanTracked).ReferenceCount == 0) 
+						if (item.Value.Orphaned) 
 						{
 							if (item.Value.Dirty) 		flush.Remove(item.Value);
 							if (!item.Value.Expired)	delete.Add(item.Key);
-							orphans.Add(item.Value.Object);
+							orphans.Add(item.Value);
 						}
 					}
 				}
@@ -290,7 +296,11 @@ namespace Coincidental
 			}
 			
 			if (Provider.Debugging && orphans.Any()) Console.WriteLine("Coincidental: Purging {0} orphan(s)", orphans.Count);
-			foreach (object item in orphans) this.container.Delete(item);
+			foreach (PersistentBase item in orphans) 
+			{
+				item.UnReferenceMembers();
+				this.container.Delete(item.Object);
+			}
 			
 			this.container.Commit();
 		}

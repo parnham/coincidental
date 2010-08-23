@@ -82,6 +82,13 @@ namespace Coincidental
 		}
 		
 		
+		public override void UnReferenceMembers()
+		{
+			if (this.orphanTrackedKey) 		foreach(var key in this.persistent.Keys.Cast<IPersistence>())		key.UnReference();
+			if (this.orphanTrackedValue)	foreach(var value in this.persistent.Values.Cast<IPersistence>()) 	value.UnReference();
+		}
+		
+		
 		private KeyValueSet GetSet(TKey key, TValue value)
 		{
 			TKey sourceKey		= key, 		persistentKey	= key;
@@ -270,7 +277,7 @@ namespace Coincidental
 			this.source.Clear();
 			if (this.isClass) 
 			{
-				if (this.orphanTrackedKey) 		foreach (var key in this.persistent.Keys.Cast<IPersistence>())		key.UnReference();
+				if (this.orphanTrackedKey) 		foreach(var key in this.persistent.Keys.Cast<IPersistence>())		key.UnReference();
 				if (this.orphanTrackedValue)	foreach(var value in this.persistent.Values.Cast<IPersistence>()) 	value.UnReference();
 				this.persistent.Clear();
 			}

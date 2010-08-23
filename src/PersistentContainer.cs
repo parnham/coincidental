@@ -83,5 +83,20 @@ namespace Coincidental
 			
 			property.SetValue(this.Object, actual, null);
 		}
+		
+		
+		public override void UnReferenceMembers()
+		{
+			Type type = this.Object.GetType();
+
+			foreach (PropertyInfo property in type.GetProperties())
+			{
+				if (orphanType.IsAssignableFrom(property.PropertyType))
+				{
+					object value = property.GetValue(this.Object, null);
+					if (value != null) this.cache.GetBase(type,  value).UnReference();
+				}
+			}
+		}
 	}
 }

@@ -311,6 +311,7 @@ namespace CoincidentalTest
 				db.Initialise(config);
 				
 				UnTracked untracked = db.Store(new UnTracked { Name = "UnTracked" });
+				UnTracked other		= db.Store(new UnTracked { Name = "Other" });
 				Tracked tracked		= db.Store(new Tracked { Name = "Tracked", ReferenceCount = 10 });
 				
 				Console.WriteLine("Initial reference count = {0}", tracked.ReferenceCount);
@@ -326,6 +327,9 @@ namespace CoincidentalTest
 				
 				using (db.Lock(untracked)) untracked.Item = tracked;
 				Console.WriteLine("Single reference added, count = {0}", tracked.ReferenceCount);
+				
+				using (db.Lock(other)) other.Item = tracked;
+				Console.WriteLine("Single reference added to other, count = {0}", tracked.ReferenceCount);
 				
 				using (db.Lock(untracked.ItemList)) untracked.ItemList.Add(tracked);
 				Console.WriteLine("Added to list, count = {0}", tracked.ReferenceCount);
@@ -357,9 +361,13 @@ namespace CoincidentalTest
 				db.Initialise(config);
 				
 				UnTracked untracked = db.Get<UnTracked>(u => u.Name == "UnTracked");
+				UnTracked other		= db.Get<UnTracked>(u => u.Name == "Other");
 				Tracked tracked		= db.Get<Tracked>(t => t.Name == "Tracked");
 				
 				Console.WriteLine("Closed and opened new provider with automatic orphan purge enabled, count = {0}", tracked.ReferenceCount);
+				
+				db.Delete(other);
+				Console.WriteLine("Deleted other, count = {0}", tracked.ReferenceCount);
 				
 				using (db.Lock(untracked)) untracked.Item = null;
 				Console.WriteLine("Single reference removed, count = {0}", tracked.ReferenceCount);

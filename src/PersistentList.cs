@@ -63,6 +63,12 @@ namespace Coincidental
 		}
 		
 		
+		public override void UnReferenceMembers()
+		{
+			if (this.orphanTracked) foreach (var item in this.persistent.Cast<IPersistence>()) item.UnReference();	
+		}
+		
+		
 	#region IList<T> Members
 		public int IndexOf(T item)
 		{

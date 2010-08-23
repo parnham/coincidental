@@ -26,6 +26,7 @@ namespace Coincidental
 		
 		void Reference();
 		void UnReference();
+		void UnReferenceMembers();
 	}
 	
 	
