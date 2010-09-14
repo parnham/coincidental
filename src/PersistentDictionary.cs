@@ -61,8 +61,8 @@ namespace Coincidental
 				
 				foreach (KeyValuePair<TKey, TValue> item in this.source)
 				{
-					TKey key 		= this.isKeyClass   ? (TKey)this.cache.GetPersistent(this.keyType, item.Key) : item.Key;
-					TValue value	= this.isValueClass ? (TValue)this.cache.GetPersistent(this.valueType, item.Value) : item.Value;
+					TKey key 		= this.isKeyClass   ? (TKey)this.cache.GetPersistent(item.Key) : item.Key;
+					TValue value	= this.isValueClass ? (TValue)this.cache.GetPersistent(item.Value) : item.Value;
 					
 					this.persistent.Add(key, value);
 				}
@@ -96,14 +96,14 @@ namespace Coincidental
 			
 			if (this.isKeyClass)
 			{	
-				IPersistentBase item	= this.GetBase(this.keyType, key);
+				IPersistentBase item	= this.GetBase(key);
 				sourceKey				= (TKey)item.Object;
 				persistentKey			= (TKey)item.PersistentObject;
 			}
 			
 			if (this.isValueClass)
 			{
-				IPersistentBase item	= this.GetBase(this.valueType, value);
+				IPersistentBase item	= this.GetBase(value);
 				sourceValue				= (TValue)item.Object;
 				persistentValue			= (TValue)item.PersistentObject;
 			}

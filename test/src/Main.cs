@@ -25,9 +25,10 @@ namespace CoincidentalTest
 					case "stress":		MainClass.StressTest();		break;
 					case "query":		MainClass.QueryTest();		break;
 					case "orphan":		MainClass.OrphanTest();		break;
+					case "basequery":	MainClass.BaseQueryTest();	break;
 				}
 			}
-			else Console.WriteLine("Invalid arguments (choose from 'indexing', 'stress', 'query' or 'orphan')");
+			else Console.WriteLine("Invalid arguments (choose from 'indexing', 'stress', 'query', 'orphan' or 'basequery')");
 		}
 		
 		
@@ -378,6 +379,52 @@ namespace CoincidentalTest
 				
 				if (tracked == null) 	Console.WriteLine("Attempted to re-acquire tracked item, but it was successfully purged");
 				else 					Console.WriteLine("Managed to re-acquire tracked item, automatic purging failed!");
+			}
+		}
+		
+		
+		private static void BaseQueryTest()
+		{
+			CoincidentalConfiguration config = Provider.Configure
+				.Connection("test.yap")
+				.ActivationDepth(1)
+				.Debugging;
+			
+			using (Provider db = new Provider())
+			{
+				if (File.Exists("test.yap")) File.Delete("test.yap");
+				db.Initialise(config);
+				
+				db.Store(new TestBase { Name = "FirstBase" });
+				db.Store(new TestBase { Name = "SecondBase" });
+				db.Store(new TestDescendant { Name = "FirstDescendant", Value = 42 });
+				db.Store(new TestDescendant { Name = "SecondDescendant", Value = 1 });
+				
+				Console.WriteLine("Added test data");
+			}
+			
+			using (Provider db = new Provider())
+			{
+				db.Initialise(config);
+				
+				Console.WriteLine("Querying for TestDescendant");
+				
+				foreach (TestDescendant d in db.Query<TestDescendant>())
+				{
+					Console.WriteLine("  Found: {0}", d.Name);
+				}
+			}
+			
+			using (Provider db = new Provider())
+			{
+				db.Initialise(config);
+				
+				Console.WriteLine("Querying for TestBase");
+				
+				foreach (TestBase d in db.Query<TestBase>())
+				{
+					Console.WriteLine("  Found: {0} {1} descendant", d.Name, d is TestDescendant ? "is" : "is not");
+				}
 			}
 		}
 	}

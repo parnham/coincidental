@@ -65,4 +65,16 @@ namespace CoincidentalTest
 		public virtual long ReferenceCount { get; set; }
 		public virtual string Name { get; set; }
 	}
+	
+	
+	public class TestBase
+	{
+		public virtual string Name { get; set; }
+	}
+	 
+	
+	public class TestDescendant : TestBase
+	{
+		public virtual long Value { get; set; }
+	}
 }

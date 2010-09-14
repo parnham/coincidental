@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Collections.Generic;
 
 using Db4objects.Db4o;
+using System.Collections;
 
 
 namespace Coincidental
@@ -47,7 +48,7 @@ namespace Coincidental
 		}
 		
 		
-		public PersistentBase GetBase(Type type, object item)
+		public PersistentBase GetBase(object item)
 		{
 			PersistentBase result = null;
 			
@@ -67,10 +68,12 @@ namespace Coincidental
 					}
 					else 
 					{
+						Type type = item.GetType();
+						
 						if (type.IsGenericType)
 						{
-							if (this.IsList(type))				result = Activator.CreateInstance(this.MakeList(type), id, this.Activate(item), this) as PersistentBase;
-							else if (this.IsDictionary(type))	result = Activator.CreateInstance(this.MakeDictionary(type), id, this.Activate(item), this)	as PersistentBase;
+							if (item is IList)				result = Activator.CreateInstance(this.MakeList(type), id, this.Activate(item), this) as PersistentBase;
+							else if (item is IDictionary)	result = Activator.CreateInstance(this.MakeDictionary(type), id, this.Activate(item), this)	as PersistentBase;
 						}
 						else result = new PersistentContainer(type, id, this.Activate(item), this);
 							
@@ -181,17 +184,17 @@ namespace Coincidental
 		}
 		
 	
-		public object GetPersistent(Type type, object item)
+		public object GetPersistent(object item)
 		{
-			PersistentBase pb = this.GetBase(type, item);
+			PersistentBase pb = this.GetBase(item);
 			
 			return pb != null ? pb.PersistentObject : null;
 		}
 		
 		
-		public object GetSource(Type type, object item)
+		public object GetSource(object item)
 		{
-			PersistentBase pb = this.GetBase(type, item);
+			PersistentBase pb = this.GetBase(item);
 			
 			return pb != null ? pb.Object : null;
 		}

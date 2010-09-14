@@ -40,7 +40,7 @@ namespace Coincidental
 			if (Persistence.Required(type))
 			{
 				object obj	= this.Read(() => property.GetValue(this.Object, null));
-				result		= this.cache.GetPersistent(type, obj);
+				result		= this.cache.GetPersistent(obj);
 			}
 			else result = this.Read(() => property.GetValue(this.Object, null));
 				
@@ -67,14 +67,14 @@ namespace Coincidental
 				if (orphanTracked)
 				{
 					object current = property.GetValue(this.Object, null);
-					if (current != null) this.cache.GetBase(type, current).UnReference();
+					if (current != null) this.cache.GetBase(current).UnReference();
 				}
 			
 				if (value != null)
 				{
 					// If target is not persistent, create a new persistent wrapper and actually store the object to the database. If the target is persistent simply retrieve its source.
 					//actual = (value is IPersistence) ? (value as IPersistence).GetSource() : this.cache.GetSource(type, value);
-					IPersistentBase persistent	= (value is IPersistence) ? (value as IPersistence).GetBase() : this.cache.GetBase(type, value);
+					IPersistentBase persistent	= (value is IPersistence) ? (value as IPersistence).GetBase() : this.cache.GetBase(value);
 					actual						= persistent.Object;
 					
 					if (orphanTracked) persistent.Reference();
@@ -94,7 +94,7 @@ namespace Coincidental
 				if (orphanType.IsAssignableFrom(property.PropertyType))
 				{
 					object value = property.GetValue(this.Object, null);
-					if (value != null) this.cache.GetBase(type,  value).UnReference();
+					if (value != null) this.cache.GetBase(value).UnReference();
 				}
 			}
 		}

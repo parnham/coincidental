@@ -45,7 +45,7 @@ namespace Coincidental
 				
 				foreach (T item in this.source)
 				{
-					this.persistent.Add((T)this.cache.GetPersistent(this.type, item));
+					this.persistent.Add((T)this.cache.GetPersistent(item));
 				}
 			}
 		}
@@ -83,7 +83,7 @@ namespace Coincidental
 
 			if (this.isClass)
 			{
-				IPersistentBase persistent = this.GetBase(this.type, item);
+				IPersistentBase persistent = this.GetBase(item);
 
 				this.source.Insert(index, (T)persistent.Object);
 				this.persistent.Insert(index, (T)persistent.PersistentObject);
@@ -109,7 +109,7 @@ namespace Coincidental
 				
 				if (this.isClass)
 				{
-					IPersistentBase persistent	= this.GetBase(this.type, value);
+					IPersistentBase persistent	= this.GetBase(value);
 					
 					if (this.orphanTracked) 
 					{
@@ -133,7 +133,7 @@ namespace Coincidental
 			
 			if (this.isClass)
 			{
-				IPersistentBase persistent = this.GetBase(this.type, item);
+				IPersistentBase persistent = this.GetBase(item);
 
 				this.source.Add((T)persistent.Object);
 				this.persistent.Add((T)persistent.PersistentObject);

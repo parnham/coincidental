@@ -110,7 +110,7 @@ namespace Coincidental
 		/// <returns>Returns a persistent instance of the object.</returns>
 		public T Store<T>(T entity) where T : class
 		{
-			return this.cache.GetPersistent(entity.GetType(), entity) as T;
+			return this.cache.GetPersistent(entity) as T;
 		}
 		
 		
@@ -155,7 +155,7 @@ namespace Coincidental
 		/// <returns>Returns a persisted entity or null if no matching entity was found.</returns>
 		public T Get<T>(System.Linq.Expressions.Expression<Func<T, bool>> expression) where T : class
 		{
-			return this.cache.GetPersistent(typeof(T), this.container.AsQueryable<T>().Where(expression).SingleOrDefault()) as T;
+			return this.cache.GetPersistent(this.container.AsQueryable<T>().Where(expression).SingleOrDefault()) as T;
 		}
 		
 		

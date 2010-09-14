@@ -131,9 +131,9 @@ namespace Coincidental
 		}
 		
 		
-		protected IPersistentBase GetBase(Type type, object item)
+		protected IPersistentBase GetBase(object item)
 		{
-			return (item is IPersistence) ? (item as IPersistence).GetBase() : this.cache.GetBase(type, item);
+			return (item is IPersistence) ? (item as IPersistence).GetBase() : this.cache.GetBase(item);
 		}
 	}
 }

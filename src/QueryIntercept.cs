@@ -103,7 +103,7 @@ namespace Coincidental
 
 				foreach (T item in this.source.CreateQuery<T>(expression))
 				{
-					result.Add((T)this.cache.GetPersistent(type, item));
+					result.Add((T)this.cache.GetPersistent(item));
 				}
 			
 				return result.GetEnumerator();
@@ -116,14 +116,14 @@ namespace Coincidental
 		public T Execute<T>(Expression expression)
 		{
 			Type type = typeof(T);
-			return type.IsClass ? (T)this.cache.GetPersistent(type, this.source.Execute<T>(expression)) : this.source.Execute<T>(expression);
+			return type.IsClass ? (T)this.cache.GetPersistent(this.source.Execute<T>(expression)) : this.source.Execute<T>(expression);
 		}
 		
 		
 		public object Execute(Expression expression)
 		{
 			Type type = expression.GetType();
-			return type.IsClass ? this.cache.GetPersistent(type, this.source.Execute(expression)) : this.source.Execute(expression);
+			return type.IsClass ? this.cache.GetPersistent(this.source.Execute(expression)) : this.source.Execute(expression);
 		}
 		
 		
